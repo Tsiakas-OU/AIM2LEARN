@@ -1,2 +1,2 @@
-# AIM2LEARN
-Interactive Design Workshop Tool for designing AI-powered multimodal learning analytics dashboards.
+# AIM²LEARN
+Interactive design workshop Tool for designing AI-powered multimodal learning analytics dashboards.
