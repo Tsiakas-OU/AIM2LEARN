@@ -1,0 +1,3559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> AIM²LEARN Design Workshop Tool</title>
+    <style>
+        /* --- Reset & Base --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --accent: #4f46e5;
+            --accent-light: #eef2ff;
+            --border: #e2e8f0;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 20px 40px -12px rgba(79, 70, 229, 0.25);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Layout --- */
+        .app {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 0;
+            min-height: 100vh;
+            max-width: 100vw;
+        }
+
+        /* --- Main Area (Circle) --- */
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            min-height: 100vh;
+            background: var(--bg);
+            position: relative;
+        }
+
+        /* --- Circle Container --- */
+        .circle-container {
+            position: relative;
+            width: 100%;
+            max-width: 720px;
+            aspect-ratio: 1/1;
+            margin: 0 auto;
+        }
+
+        .circle-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 72%;
+            height: 72%;
+            border-radius: 50%;
+            border: 4px dashed var(--accent);
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        .workshop-header {
+            text-align: center;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        .workshop-header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.02em;
+        }
+
+        .workshop-header .subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .workshop-header .hint {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            opacity: 0.6;
+            margin-top: 0.2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .circle-node {
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 3px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            padding: 0.5rem;
+            z-index: 5;
+            user-select: none;
+        }
+
+        .circle-node::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+
+        .circle-node:hover::after {
+            border-color: var(--accent);
+            opacity: 0.3;
+        }
+
+        .circle-node:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-hover);
+            transform: scale(1.05);
+        }
+
+        .circle-node.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-light), var(--shadow-hover);
+        }
+
+        .circle-node .node-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.1rem;
+        }
+
+        .circle-node .node-label {
+            font-weight: 700;
+            font-size: 0.7rem;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .circle-node .node-badge {
+            font-size: 0.45rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 0.08rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 0.1rem;
+        }
+
+        /* Node colors */
+        .circle-node.node-1 { border-color: #3b82f6; }
+        .circle-node.node-1 .node-badge { background: #dbeafe; color: #2563eb; }
+        .circle-node.node-2 { border-color: #8b5cf6; }
+        .circle-node.node-2 .node-badge { background: #ede9fe; color: #7c3aed; }
+        .circle-node.node-3 { border-color: #f59e0b; }
+        .circle-node.node-3 .node-badge { background: #fef3c7; color: #d97706; }
+        .circle-node.node-4 { border-color: #10b981; }
+        .circle-node.node-4 .node-badge { background: #d1fae5; color: #059669; }
+        .circle-node.node-5 { border-color: #14b8a6; }
+        .circle-node.node-5 .node-badge { background: #ccfbf1; color: #0d9488; }
+        .circle-node.node-6 { border-color: #ec4899; }
+        .circle-node.node-6 .node-badge { background: #fce7f3; color: #db2777; }
+
+        /* --- Panel Overlay --- */
+        .panel-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            max-width: 1200px;
+            max-height: 90vh;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            padding: 2.5rem 3rem;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid var(--border);
+            animation: panelPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .panel-overlay.open { display: block; }
+        .panel-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+            display: none;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+        .panel-backdrop.open { display: block; }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes panelPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .panel-overlay::-webkit-scrollbar { width: 6px; }
+        .panel-overlay::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
+        .panel-overlay::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+        .panel-overlay .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--accent-light);
+            flex-wrap: wrap;
+        }
+
+        .panel-overlay .panel-header .panel-icon { font-size: 1.8rem; }
+        .panel-overlay .panel-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+        .panel-overlay .panel-header .badge {
+            background: var(--accent);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.2rem 1rem;
+            border-radius: 20px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            margin-left: auto;
+        }
+        .panel-overlay .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0 0.4rem;
+            transition: var(--transition);
+        }
+        .panel-overlay .close-btn:hover { color: var(--text); transform: rotate(90deg); }
+        .panel-overlay .description {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-bottom: 1.2rem;
+            line-height: 1.6;
+        }
+
+        /* --- Search Bar --- */
+        .search-container {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        .search-container input {
+            width: 100%;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--bg);
+        }
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .search-container .search-icon {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        /* --- Subcategory Styles --- */
+        .subcategory-group {
+            margin-bottom: 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: var(--bg);
+        }
+        .subcategory-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+            background: var(--card-bg);
+            transition: var(--transition);
+            user-select: none;
+            border-bottom: 1px solid var(--border);
+        }
+        .subcategory-header:hover { background: var(--accent-light); }
+        .subcategory-header .sub-toggle {
+            transition: transform 0.3s ease;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        .subcategory-header .sub-toggle.open { transform: rotate(180deg); }
+        .subcategory-items {
+            padding: 0.3rem 0.5rem;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+        }
+        .subcategory-items.open {
+            max-height: 3000px;
+            opacity: 1;
+            padding: 0.5rem;
+        }
+        .subcategory-items .checkbox-item { margin-bottom: 0.2rem; }
+        .subcategory-items .checkbox-item:last-child { margin-bottom: 0; }
+
+        /* --- Framework Cards --- */
+        .framework-section {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--accent-light);
+        }
+        .framework-section .section-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .framework-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .framework-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: default;
+        }
+        .framework-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-hover);
+        }
+        .framework-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            background: var(--bg);
+            display: block;
+            cursor: pointer;
+        }
+        .framework-card .card-body {
+            padding: 0.6rem 0.8rem;
+            cursor: pointer;
+        }
+        .framework-card .card-body:hover { background: var(--accent-light); }
+        .framework-card .card-body .card-title {
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: var(--text);
+            margin-bottom: 0.1rem;
+        }
+        .framework-card .card-body .card-paper {
+            font-size: 0.65rem;
+            color: var(--accent);
+            text-decoration: underline;
+            display: block;
+        }
+        .framework-card .card-body .card-paper:hover { color: var(--text); }
+
+        /* --- Add Your Own Category --- */
+        .add-category-container {
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+            border-top: 2px solid var(--accent-light);
+        }
+        .add-category-header {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0;
+            transition: var(--transition);
+        }
+        .add-category-header:hover { color: var(--text); }
+        .add-category-fields {
+            display: none;
+            gap: 0.3rem;
+            margin-top: 0.3rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .add-category-fields.active { display: flex; }
+        .add-category-fields input[type="text"] {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.3rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+        .add-category-fields input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .add-category-fields .add-cat-btn {
+            padding: 0.3rem 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .add-category-fields .add-cat-btn:hover { opacity: 0.85; }
+
+        /* --- Add Your Own Item --- */
+        .add-own-container {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--border);
+        }
+        .add-own-header {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0;
+            transition: var(--transition);
+        }
+        .add-own-header:hover { color: var(--accent); }
+        .add-own-fields {
+            display: none;
+            gap: 0.3rem;
+            margin-top: 0.3rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .add-own-fields.active { display: flex; }
+        .add-own-fields input[type="text"] {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+        .add-own-fields input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .add-own-fields .icon-picker {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+        }
+        .add-own-fields .icon-picker span {
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.1rem 0.2rem;
+            border-radius: 4px;
+            transition: var(--transition);
+            opacity: 0.5;
+        }
+        .add-own-fields .icon-picker span:hover,
+        .add-own-fields .icon-picker span.active {
+            opacity: 1;
+            background: var(--accent-light);
+        }
+        .add-own-fields .add-btn {
+            padding: 0.2rem 0.8rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .add-own-fields .add-btn:hover { opacity: 0.85; }
+
+        /* --- Toast --- */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-hover);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+        .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* --- Checkbox items --- */
+        .checkbox-item {
+            display: flex;
+            flex-direction: column;
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            background: var(--card-bg);
+        }
+        .checkbox-item:hover {
+            background: var(--accent-light);
+            border-color: var(--border);
+        }
+        .checkbox-item .checkbox-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            cursor: pointer;
+        }
+        .checkbox-item input[type="checkbox"] {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+        .checkbox-item input[type="checkbox"]:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .checkbox-item input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .checkbox-item .item-icon { font-size: 1rem; flex-shrink: 0; }
+        .checkbox-item .item-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.05rem;
+        }
+        .checkbox-item .item-label {
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.2;
+            font-size: 0.85rem;
+        }
+        .checkbox-item .item-description {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+        .checkbox-item.selected {
+            background: var(--accent-light);
+            border-color: var(--accent);
+        }
+        .checkbox-item.highlight-new {
+            animation: highlightNew 1.5s ease;
+        }
+        @keyframes highlightNew {
+            0% { background: #bbf7d0; border-color: #22c55e; transform: scale(1.02); }
+            100% { background: var(--accent-light); border-color: var(--accent); transform: scale(1); }
+        }
+
+        /* --- AI fields --- */
+        .ai-fields {
+            display: none;
+            gap: 0.3rem;
+            margin-top: 0.2rem;
+            padding-left: 1.6rem;
+            flex-wrap: wrap;
+        }
+        .ai-fields.active { display: flex; }
+        .ai-fields .ai-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+            flex: 1;
+            min-width: 120px;
+        }
+        .ai-fields .ai-field label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .ai-fields .ai-field input {
+            width: 100%;
+            padding: 0.2rem 0.4rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--card-bg);
+        }
+        .ai-fields .ai-field input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            background: var(--card-bg);
+            border-left: 1px solid var(--border);
+            padding: 1.5rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow-y: auto;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.02);
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--accent-light);
+            margin-bottom: 1rem;
+        }
+        .sidebar-header h3 { font-size: 1rem; font-weight: 700; color: var(--text); }
+        .sidebar-header .count-badge {
+            background: var(--accent);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 0.05rem 0.6rem;
+            border-radius: 12px;
+            margin-left: auto;
+        }
+        .sidebar .empty-state {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 2rem 0.5rem;
+            opacity: 0.6;
+        }
+        .sidebar .empty-state .empty-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+
+        .use-case-section {
+            margin-bottom: 1rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--accent-light);
+        }
+        .use-case-section label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+        .use-case-section input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.8rem;
+            transition: var(--transition);
+            margin-bottom: 0.8rem;
+        }
+        .use-case-section input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .use-case-section textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.8rem;
+            resize: vertical;
+            min-height: 60px;
+            transition: var(--transition);
+        }
+        .use-case-section textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .collection-group { margin-bottom: 0.8rem; }
+        .collection-group .group-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            padding-bottom: 0.2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0.3rem;
+        }
+        .collection-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            padding: 0.4rem 0.4rem;
+            border-radius: 4px;
+            background: var(--bg);
+            margin-bottom: 0.3rem;
+            border: 1px solid transparent;
+            transition: var(--transition);
+        }
+        .collection-item:hover {
+            background: var(--accent-light);
+            border-color: var(--border);
+        }
+        .collection-item .item-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .collection-item .item-icon { font-size: 0.8rem; }
+        .collection-item .item-label {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text);
+            flex: 1;
+        }
+        .collection-item .remove-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.7rem;
+            padding: 0 0.2rem;
+            transition: var(--transition);
+            opacity: 0.5;
+        }
+        .collection-item .remove-btn:hover { opacity: 1; color: #ef4444; }
+        .collection-item .item-comment {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            padding-left: 1.6rem;
+        }
+        .collection-item .item-comment textarea {
+            width: 100%;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.7rem;
+            resize: vertical;
+            min-height: 35px;
+            background: var(--card-bg);
+            transition: var(--transition);
+        }
+        .collection-item .item-comment textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .collection-item .item-comment .comment-label {
+            font-size: 0.6rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+        .collection-item .ai-io-fields {
+            display: none;
+            gap: 0.5rem;
+            padding-left: 1.6rem;
+            flex-wrap: wrap;
+        }
+        .collection-item .ai-io-fields.show { display: flex; }
+        .collection-item .ai-io-fields .io-field {
+            flex: 1;
+            min-width: 100px;
+        }
+        .collection-item .ai-io-fields .io-field label {
+            font-size: 0.55rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            display: block;
+            margin-bottom: 0.1rem;
+        }
+        .collection-item .ai-io-fields .io-field input {
+            width: 100%;
+            padding: 0.2rem 0.4rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-family: inherit;
+            background: var(--card-bg);
+            transition: var(--transition);
+        }
+        .collection-item .ai-io-fields .io-field input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .sidebar .clear-all {
+            margin-top: auto;
+            padding-top: 0.8rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        .sidebar .clear-all button {
+            flex: 1;
+            min-width: 60px;
+            padding: 0.4rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--card-bg);
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+        .sidebar .clear-all button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+        .sidebar .clear-all .export-btn {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .sidebar .clear-all .export-btn:hover { opacity: 0.85; }
+        .sidebar .clear-all .load-btn { background: var(--bg); border-color: var(--border); }
+        .sidebar .clear-all .load-btn:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 1024px) {
+            .app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+            .sidebar { height: auto; max-height: 400px; border-left: none; border-top: 1px solid var(--border); position: relative; padding: 1rem; }
+            .main-area { min-height: 80vh; padding: 1rem; }
+            .circle-container { max-width: 560px; }
+            .circle-node { width: 100px; height: 100px; padding: 0.4rem; }
+            .circle-node .node-icon { font-size: 1.4rem; }
+            .circle-node .node-label { font-size: 0.55rem; }
+            .circle-node .node-badge { font-size: 0.38rem; padding: 0.04rem 0.4rem; }
+            .panel-overlay { width: 92%; max-width: 800px; padding: 1.8rem; max-height: 85vh; }
+            .framework-cards { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            .circle-container { max-width: 420px; }
+            .circle-node { width: 78px; height: 78px; padding: 0.25rem; }
+            .circle-node .node-icon { font-size: 1.1rem; }
+            .circle-node .node-label { font-size: 0.45rem; }
+            .circle-node .node-badge { font-size: 0.32rem; padding: 0.04rem 0.3rem; }
+            .panel-overlay { width: 95%; max-width: 500px; padding: 1.2rem; max-height: 90vh; }
+            .framework-cards { grid-template-columns: 1fr; }
+            .framework-card img { height: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app">
+
+        <!-- ===== MAIN AREA (Circle) ===== -->
+        <div class="main-area">
+            <div class="panel-backdrop" id="panelBackdrop" onclick="closePanel()"></div>
+            <div class="workshop-header">
+                <h1>🃏 AIM²LEARN Design Tool</h1>
+                <div class="hint">✨ Click a card to explore · Select items to build your use case</div>
+            </div>
+            <div class="circle-container" id="circleContainer">
+                <div class="circle-ring"></div>
+                <div class="circle-node node-1" data-panel="panel1">
+                    <span class="node-icon">📡</span>
+                    <span class="node-label">MMLA Modalities</span>
+                    <span class="node-badge">Data Sources</span>
+                </div>
+                <div class="circle-node node-2" data-panel="panel2">
+                    <span class="node-icon">🤖</span>
+                    <span class="node-label">AI Approaches</span>
+                    <span class="node-badge">Methods &amp; Explainability</span>
+                </div>
+                <div class="circle-node node-3" data-panel="panel3">
+                    <span class="node-icon">📊</span>
+                    <span class="node-label">Dashboard<br>Functionality</span>
+                    <span class="node-badge">From Data to Action</span>
+                </div>
+                <div class="circle-node node-4" data-panel="panel4">
+                    <span class="node-icon">📚</span>
+                    <span class="node-label">Learning &amp; Instruction</span>
+                    <span class="node-badge">Pedagogical Action</span>
+                </div>
+                <div class="circle-node node-5" data-panel="panel5">
+                    <span class="node-icon">👥</span>
+                    <span class="node-label">Learner Context</span>
+                    <span class="node-badge">Who &amp; How They Learn</span>
+                </div>
+                <div class="circle-node node-6" data-panel="panel6">
+                    <span class="node-icon">📊</span>
+                    <span class="node-label">Visualization<br>Methods</span>
+                    <span class="node-badge">From Data to Insight</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL 1: MMLA MODALITIES ===== -->
+        <div class="panel-overlay" id="panel1">
+            <div class="panel-header">
+                <span class="panel-icon">📡</span>
+                <h2>MMLA Modalities</h2>
+                <span class="badge">Data Sources</span>
+                <button class="close-btn" onclick="closePanel()">✕</button>
+            </div>
+            <p class="description">Multimodal data streams capture the invisible processes of reading. Select the data modalities relevant to your design.</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search modalities..." oninput="filterItems(this, 'panel1')">
+            </div>
+
+            <!-- Digital Data -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>💻 Digital Data</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🖱️" data-label="Log Data">
+                            <span class="item-icon">🖱️</span>
+                            <span class="item-content">
+                                <span class="item-label">Log Data</span>
+                                <span class="item-description">Clickstreams, navigation paths, time spent on tasks</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="⌨️" data-label="Keystroke Dynamics">
+                            <span class="item-icon">⌨️</span>
+                            <span class="item-content">
+                                <span class="item-label">Keystroke Dynamics</span>
+                                <span class="item-description">Typing patterns, pauses, rhythm, and pressure</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physical Data -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🎥 Physical Data</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="😊" data-label="Facial Expression">
+                            <span class="item-icon">😊</span>
+                            <span class="item-content">
+                                <span class="item-label">Facial Expression</span>
+                                <span class="item-description">Emotion inference: confusion, frustration, joy, boredom</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🖐️" data-label="Hand Tracking">
+                            <span class="item-icon">🖐️</span>
+                            <span class="item-content">
+                                <span class="item-label">Hand Tracking</span>
+                                <span class="item-description">Fine motor movements, hand positioning, manipulation</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🧍" data-label="Posture Analysis">
+                            <span class="item-icon">🧍</span>
+                            <span class="item-content">
+                                <span class="item-label">Posture Analysis</span>
+                                <span class="item-description">Sitting position, slouching, alertness indicators</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="✍️" data-label="Writing / Drawing">
+                            <span class="item-icon">✍️</span>
+                            <span class="item-content">
+                                <span class="item-label">Writing / Drawing</span>
+                                <span class="item-description">Pen strokes, sketches, annotations, concept mapping</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physiological -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🧠 Physiological</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🧠" data-label="EEG (Brain Activity)">
+                            <span class="item-icon">🧠</span>
+                            <span class="item-content">
+                                <span class="item-label">EEG (Brain Activity)</span>
+                                <span class="item-description">Cognitive load, attention, engagement, mental states</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="👁️" data-label="Eye-Tracking">
+                            <span class="item-icon">👁️</span>
+                            <span class="item-content">
+                                <span class="item-label">Eye-Tracking</span>
+                                <span class="item-description">Gaze patterns, fixations, saccades, pupil dilation</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="❤️" data-label="Heart Rate (ECG/HRV)">
+                            <span class="item-icon">❤️</span>
+                            <span class="item-content">
+                                <span class="item-label">Heart Rate (ECG/HRV)</span>
+                                <span class="item-description">Stress, arousal, emotional regulation, engagement</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🌡️" data-label="Skin Conductance (GSR)">
+                            <span class="item-icon">🌡️</span>
+                            <span class="item-content">
+                                <span class="item-label">Skin Conductance (GSR)</span>
+                                <span class="item-description">Emotional arousal, excitement, surprise, stress</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🫁" data-label="Respiration Rate">
+                            <span class="item-icon">🫁</span>
+                            <span class="item-content">
+                                <span class="item-label">Respiration Rate</span>
+                                <span class="item-description">Breathing patterns, stress indicators, relaxation</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio / Speech -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🎤 Audio / Speech</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🎤" data-label="Audio / Speech">
+                            <span class="item-icon">🎤</span>
+                            <span class="item-content">
+                                <span class="item-label">Audio / Speech</span>
+                                <span class="item-description">Verbal utterances, prosody, turn-taking, discussion analysis</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🎵" data-label="Pitch/Prosody">
+                            <span class="item-icon">🎵</span>
+                            <span class="item-content">
+                                <span class="item-label">Pitch/Prosody</span>
+                                <span class="item-description">Emotional tone, emphasis, confidence, stress</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🗣️" data-label="Voice Intensity">
+                            <span class="item-icon">🗣️</span>
+                            <span class="item-content">
+                                <span class="item-label">Voice Intensity</span>
+                                <span class="item-description">Volume, energy, engagement level</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🎯" data-label="Speech-to-Text">
+                            <span class="item-icon">🎯</span>
+                            <span class="item-content">
+                                <span class="item-label">Speech-to-Text</span>
+                                <span class="item-description">Transcription, content analysis, vocabulary usage</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contextual Data -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>📊 Contextual Data</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Psychometric Data">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Psychometric Data</span>
+                                <span class="item-description">Self-reports, surveys, personality & motivation assessments</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🌍" data-label="Environmental Data">
+                            <span class="item-icon">🌍</span>
+                            <span class="item-content">
+                                <span class="item-label">Environmental Data</span>
+                                <span class="item-description">Lighting, noise level, temperature, learning space context</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📋" data-label="Behavioral Logs">
+                            <span class="item-icon">📋</span>
+                            <span class="item-content">
+                                <span class="item-label">Behavioral Logs</span>
+                                <span class="item-description">Task completion, strategy use, resource access patterns</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📈" data-label="Performance Data">
+                            <span class="item-icon">📈</span>
+                            <span class="item-content">
+                                <span class="item-label">Performance Data</span>
+                                <span class="item-description">Comprehension scores, fluency metrics, progress tracking</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="👥" data-label="Social Interaction">
+                            <span class="item-icon">👥</span>
+                            <span class="item-content">
+                                <span class="item-label">Social Interaction</span>
+                                <span class="item-description">Peer interactions, collaborative patterns, group dynamics</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔄" data-label="Temporal Context">
+                            <span class="item-icon">🔄</span>
+                            <span class="item-content">
+                                <span class="item-label">Temporal Context</span>
+                                <span class="item-description">Time of day, day of week, session history</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Your Own Category -->
+            <div class="add-category-container">
+                <div class="add-category-header" onclick="toggleAddCategory(this)">
+                    <span>📁</span> + Create Your Own Category
+                </div>
+                <div class="add-category-fields">
+                    <input type="text" placeholder="Enter category name..." class="add-cat-input">
+                    <button class="add-cat-btn" onclick="addCustomCategory(this)">Create</button>
+                </div>
+            </div>
+
+            <!-- Framework Section -->
+            <div class="framework-section">
+                <div class="section-title">📚 Existing Frameworks</div>
+                <div class="framework-cards">
+                    <div class="framework-card">
+                        <a href="images/MMLA/taxonomy_dimitri.png" target="_blank" title="Open image in new tab">
+                            <img src="images/MMLA/taxonomy_dimitri.png" alt="Taxonomy of Multimodal Data for Learning" onerror="this.style.opacity='0.4'; this.alt='Image not found'">
+                        </a>
+                        <a href="#" onclick="openFramework('https://onlinelibrary.wiley.com/doi/full/10.1111/jcal.12288', 'images/MMLA/taxonomy_dimitri.png', 'Taxonomy of Multimodal Data for Learning', 'From signals to knowledge: A conceptual model for multimodal learning analytics'); return false;">
+                            <div class="card-body">
+                                <div class="card-title">Taxonomy of Multimodal Data for Learning</div>
+                                <span class="card-paper">From signals to knowledge: A conceptual model for multimodal learning analytics</span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="framework-card">
+                        <a href="images/MMLA/mmla_data.png" target="_blank" title="Open image in new tab">
+                            <img src="images/MMLA/mmla_data.png" alt="Taxonomy of Multimodal Data Sources in MMLA" onerror="this.style.opacity='0.4'; this.alt='Image not found'">
+                        </a>
+                        <a href="#" onclick="openFramework('https://www.mdpi.com/1999-5903/18/3/115#', 'images/MMLA/mmla_data.png', 'Taxonomy of Multimodal Data Sources in MMLA', 'A Survey of Multimodal Learning Analytics: Data, Methods, Systems, and Responsible Deployment'); return false;">
+                            <div class="card-body">
+                                <div class="card-title">Taxonomy of Multimodal Data Sources in MMLA</div>
+                                <span class="card-paper">A Survey of Multimodal Learning Analytics: Data, Methods, Systems, and Responsible Deployment</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL 2: AI APPROACHES ===== -->
+        <div class="panel-overlay" id="panel2">
+            <div class="panel-header">
+                <span class="panel-icon">🤖</span>
+                <h2>AI Approaches</h2>
+                <span class="badge">Methods &amp; Explainability</span>
+                <button class="close-btn" onclick="closePanel()">✕</button>
+            </div>
+            <p class="description">AI methods transform raw MMLA data into interpretable signals and actionable insights. Select the approaches that fit your analysis needs.</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search AI approaches..." oninput="filterItems(this, 'panel2')">
+            </div>
+
+            <!-- AI Methods -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🧠 AI Methods</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🧠" data-label="NLP" data-ai="true">
+                            <span class="item-icon">🧠</span>
+                            <span class="item-content">
+                                <span class="item-label">NLP (Natural Language Processing)</span>
+                                <span class="item-description">Topic extraction, summarization, comprehension assessment, sentiment analysis</span>
+                            </span>
+                        </div>
+                        <div class="ai-fields">
+                            <div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., text from reading" class="ai-input"></div>
+                            <div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., topic labels" class="ai-output"></div>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="👀" data-label="Computer Vision" data-ai="true">
+                            <span class="item-icon">👀</span>
+                            <span class="item-content">
+                                <span class="item-label">Computer Vision</span>
+                                <span class="item-description">Affect detection, engagement classification, gesture analysis, facial expression recognition</span>
+                            </span>
+                        </div>
+                        <div class="ai-fields">
+                            <div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., video frames" class="ai-input"></div>
+                            <div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., engagement score" class="ai-output"></div>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🎵" data-label="Speech Processing" data-ai="true">
+                            <span class="item-icon">🎵</span>
+                            <span class="item-content">
+                                <span class="item-label">Speech Processing</span>
+                                <span class="item-description">ASR, prosody analysis, fluency scoring, dialogue modeling</span>
+                            </span>
+                        </div>
+                        <div class="ai-fields">
+                            <div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., audio recording" class="ai-input"></div>
+                            <div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., fluency metrics" class="ai-output"></div>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📈" data-label="Time-Series Analysis" data-ai="true">
+                            <span class="item-icon">📈</span>
+                            <span class="item-content">
+                                <span class="item-label">Time-Series Analysis</span>
+                                <span class="item-description">Sequence modeling, event detection, behavioral patterns from sensor data</span>
+                            </span>
+                        </div>
+                        <div class="ai-fields">
+                            <div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., sensor data stream" class="ai-input"></div>
+                            <div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., behavioral transitions" class="ai-output"></div>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔮" data-label="Predictive Modeling" data-ai="true">
+                            <span class="item-icon">🔮</span>
+                            <span class="item-content">
+                                <span class="item-label">Predictive Modeling</span>
+                                <span class="item-description">Performance prediction, at-risk identification, early warning systems</span>
+                            </span>
+                        </div>
+                        <div class="ai-fields">
+                            <div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., historical performance" class="ai-input"></div>
+                            <div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., risk score" class="ai-output"></div>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Clustering" data-ai="true">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Clustering</span>
+                                <span class="item-description">Learner segmentation, strategy identification, behavioral profiling</span>
+                            </span>
+                        </div>
+                        <div class="ai-fields">
+                            <div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., behavior features" class="ai-input"></div>
+                            <div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., learner segments" class="ai-output"></div>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="✨" data-label="LLMs / Generative AI" data-ai="true">
+                            <span class="item-icon">✨</span>
+                            <span class="item-content">
+                                <span class="item-label">LLMs / Generative AI</span>
+                                <span class="item-description">Narrative reports, personalized feedback, question generation, adaptive content</span>
+                            </span>
+                        </div>
+                        <div class="ai-fields">
+                            <div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., student data" class="ai-input"></div>
+                            <div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., personalized narrative" class="ai-output"></div>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🧩" data-label="Anomaly Detection" data-ai="true">
+                            <span class="item-icon">🧩</span>
+                            <span class="item-content">
+                                <span class="item-label">Anomaly Detection</span>
+                                <span class="item-description">Identifying unusual patterns, outliers, unexpected behaviors</span>
+                            </span>
+                        </div>
+                        <div class="ai-fields">
+                            <div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., behavior patterns" class="ai-input"></div>
+                            <div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., anomaly alerts" class="ai-output"></div>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explainability & Transparency -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🔍 Explainability &amp; Transparency</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📖" data-label="Model Explanations">
+                            <span class="item-icon">📖</span>
+                            <span class="item-content">
+                                <span class="item-label">Model Explanations</span>
+                                <span class="item-description">Feature importance, decision trees, attention visualization, SHAP/LIME values</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Confidence Metrics">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Confidence Metrics</span>
+                                <span class="item-description">Prediction confidence scores, uncertainty measures, reliability indicators</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📋" data-label="Data Provenance">
+                            <span class="item-icon">📋</span>
+                            <span class="item-content">
+                                <span class="item-label">Data Provenance</span>
+                                <span class="item-description">Where data came from, how it was processed, quality indicators, audit trails</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🎯" data-label="Algorithmic Fairness">
+                            <span class="item-icon">🎯</span>
+                            <span class="item-content">
+                                <span class="item-label">Algorithmic Fairness</span>
+                                <span class="item-description">Bias detection, fairness metrics, equity considerations, demographic parity</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="💡" data-label="Actionable Transparency">
+                            <span class="item-icon">💡</span>
+                            <span class="item-content">
+                                <span class="item-label">Actionable Transparency</span>
+                                <span class="item-description">Clear explanations linking insight to suggested action, interpretable recommendations</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔄" data-label="Iterative Refinement">
+                            <span class="item-icon">🔄</span>
+                            <span class="item-content">
+                                <span class="item-label">Iterative Refinement</span>
+                                <span class="item-description">Continuous learning, model updates based on feedback, adaptive improvement</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Your Own Category -->
+            <div class="add-category-container">
+                <div class="add-category-header" onclick="toggleAddCategory(this)">
+                    <span>📁</span> + Create Your Own Category
+                </div>
+                <div class="add-category-fields">
+                    <input type="text" placeholder="Enter category name..." class="add-cat-input">
+                    <button class="add-cat-btn" onclick="addCustomCategory(this)">Create</button>
+                </div>
+            </div>
+
+            <!-- Framework Section -->
+            <div class="framework-section">
+                <div class="section-title">📚 Existing Frameworks</div>
+                <div class="framework-cards">
+                    <div class="framework-card">
+                        <a href="images/AI/MMLA_framework_phases.png" target="_blank" title="Open image in new tab">
+                            <img src="images/AI/MMLA_framework_phases.png" alt="MMLA and AI Framework" onerror="this.style.opacity='0.4'; this.alt='Image not found'">
+                        </a>
+                        <a href="#" onclick="openFramework('https://www.sciencedirect.com/science/article/pii/S2666920X25000669#fg0020', 'images/AI/MMLA_framework_phases.png', 'MMLA and AI Framework', 'Artificial intelligence in multimodal learning analytics: A systematic literature review'); return false;">
+                            <div class="card-body">
+                                <div class="card-title">MMLA and AI Framework</div>
+                                <span class="card-paper">Artificial intelligence in multimodal learning analytics: A systematic literature review</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL 3: DASHBOARD FUNCTIONALITY ===== -->
+        <div class="panel-overlay" id="panel3">
+            <div class="panel-header">
+                <span class="panel-icon">📊</span>
+                <h2>Dashboard Functionality</h2>
+                <span class="badge">From Data to Action</span>
+                <button class="close-btn" onclick="closePanel()">✕</button>
+            </div>
+            <p class="description">How should the system interact with users? Select the <strong>dashboard type</strong> and <strong>automation level</strong> that define the human-AI partnership.</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search functionality..." oninput="filterItems(this, 'panel3')">
+            </div>
+
+            <!-- Dashboard Type -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>📋 Dashboard Type</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🪞" data-label="Mirroring">
+                            <span class="item-icon">🪞</span>
+                            <span class="item-content">
+                                <span class="item-label">Mirroring</span>
+                                <span class="item-description">Reflecting data back to users without interpretation</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔔" data-label="Alerting">
+                            <span class="item-icon">🔔</span>
+                            <span class="item-content">
+                                <span class="item-label">Alerting</span>
+                                <span class="item-description">Notifying users about specific events, thresholds, or anomalies</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="💡" data-label="Advising">
+                            <span class="item-icon">💡</span>
+                            <span class="item-content">
+                                <span class="item-label">Advising</span>
+                                <span class="item-description">Providing recommendations, suggestions, or next steps</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="⚡" data-label="Intervening">
+                            <span class="item-icon">⚡</span>
+                            <span class="item-content">
+                                <span class="item-label">Intervening</span>
+                                <span class="item-description">Taking automated actions or triggering interventions</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Comparative Analysis">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Comparative Analysis</span>
+                                <span class="item-description">Side-by-side comparisons, benchmarks, progress tracking</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automation Level -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🎛️ Automation Level</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="👤" data-label="Teacher Full Control">
+                            <span class="item-icon">👤</span>
+                            <span class="item-content">
+                                <span class="item-label">Teacher Full Control</span>
+                                <span class="item-description">Teacher makes all decisions. No AI recommendations.</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Supportive Information">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Supportive Information</span>
+                                <span class="item-description">AI provides data and insights to inform teacher decisions.</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="⚡" data-label="Partial Automation">
+                            <span class="item-icon">⚡</span>
+                            <span class="item-content">
+                                <span class="item-label">Partial Automation</span>
+                                <span class="item-description">Some tasks automated, teacher retains significant control.</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔧" data-label="High Automation">
+                            <span class="item-icon">🔧</span>
+                            <span class="item-content">
+                                <span class="item-label">High Automation</span>
+                                <span class="item-description">System automates most tasks, teacher monitors and overrides.</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🤖" data-label="Full Automation">
+                            <span class="item-icon">🤖</span>
+                            <span class="item-content">
+                                <span class="item-label">Full Automation</span>
+                                <span class="item-description">System operates autonomously without teacher intervention.</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Your Own Category -->
+            <div class="add-category-container">
+                <div class="add-category-header" onclick="toggleAddCategory(this)">
+                    <span>📁</span> + Create Your Own Category
+                </div>
+                <div class="add-category-fields">
+                    <input type="text" placeholder="Enter category name..." class="add-cat-input">
+                    <button class="add-cat-btn" onclick="addCustomCategory(this)">Create</button>
+                </div>
+            </div>
+
+            <!-- Framework Section -->
+            <div class="framework-section">
+                <div class="section-title">📚 Existing Frameworks</div>
+                <div class="framework-cards">
+                    <div class="framework-card">
+                        <a href="images/AI/molenaar.png" target="_blank" title="Open image in new tab">
+                            <img src="images/AI/molenaar.png" alt="Automation Levels" onerror="this.style.opacity='0.4'; this.alt='Image not found'">
+                        </a>
+                        <a href="#" onclick="openFramework('https://onlinelibrary.wiley.com/doi/10.1111/ejed.12527', 'images/AI/molenaar.png', 'Automation Levels', 'Towards hybrid human-AI learning technologies'); return false;">
+                            <div class="card-body">
+                                <div class="card-title">Automation Levels</div>
+                                <span class="card-paper">Towards hybrid human-AI learning technologies</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL 4: LEARNING & INSTRUCTION ===== -->
+        <div class="panel-overlay" id="panel4">
+            <div class="panel-header">
+                <span class="panel-icon">📚</span>
+                <h2>Learning &amp; Instruction</h2>
+                <span class="badge">Pedagogical Action</span>
+                <button class="close-btn" onclick="closePanel()">✕</button>
+            </div>
+            <p class="description">Select the <strong>reading activities</strong>, <strong>instructional strategies</strong>, and <strong>assessment approaches</strong> that define your pedagogical design.</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search learning & instruction..." oninput="filterItems(this, 'panel4')">
+            </div>
+
+            <!-- Reading Activity & Context -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>📖 Reading Activity &amp; Context</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🧩" data-label="Reading Comprehension">
+                            <span class="item-icon">🧩</span>
+                            <span class="item-content">
+                                <span class="item-label">Reading Comprehension</span>
+                                <span class="item-description">Main idea, inference, sequence, conclusion</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📣" data-label="Oral Reading Fluency">
+                            <span class="item-icon">📣</span>
+                            <span class="item-content">
+                                <span class="item-label">Oral Reading Fluency</span>
+                                <span class="item-description">Speed, accuracy, prosody, miscue analysis</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🤝" data-label="Collaborative Reading">
+                            <span class="item-icon">🤝</span>
+                            <span class="item-content">
+                                <span class="item-label">Collaborative Reading</span>
+                                <span class="item-description">Group discussion, shared sensemaking, peer learning</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📚" data-label="Disciplinary Literacy">
+                            <span class="item-icon">📚</span>
+                            <span class="item-content">
+                                <span class="item-label">Disciplinary Literacy</span>
+                                <span class="item-description">Science, math, history, code, multimedia texts</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🌐" data-label="Digital / Multimedia Reading">
+                            <span class="item-icon">🌐</span>
+                            <span class="item-content">
+                                <span class="item-label">Digital / Multimedia Reading</span>
+                                <span class="item-description">Hypertext, e-books, multimodal documents</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📝" data-label="Vocabulary / Language Learning">
+                            <span class="item-icon">📝</span>
+                            <span class="item-content">
+                                <span class="item-label">Vocabulary / Language Learning</span>
+                                <span class="item-description">Context clues, morphology, word meaning</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔄" data-label="Metacognitive Reading">
+                            <span class="item-icon">🔄</span>
+                            <span class="item-content">
+                                <span class="item-label">Metacognitive Reading</span>
+                                <span class="item-description">Comprehension monitoring, self-regulation, strategy use</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="⚖️" data-label="Critical Reading">
+                            <span class="item-icon">⚖️</span>
+                            <span class="item-content">
+                                <span class="item-label">Critical Reading</span>
+                                <span class="item-description">Evaluating arguments, fact vs. opinion, author's purpose</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructional Strategy -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🧑‍🏫 Instructional Strategy</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="💬" data-label="Feedback">
+                            <span class="item-icon">💬</span>
+                            <span class="item-content">
+                                <span class="item-label">Feedback</span>
+                                <span class="item-description">Specific, timely, actionable feedback to students</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Split into Groups">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Split into Groups</span>
+                                <span class="item-description">Ability grouping, strategic grouping based on data</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📝" data-label="Adjust Material">
+                            <span class="item-icon">📝</span>
+                            <span class="item-content">
+                                <span class="item-label">Adjust Material</span>
+                                <span class="item-description">Modify text complexity, adapt content, provide resources</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="✏️" data-label="Active Reading">
+                            <span class="item-icon">✏️</span>
+                            <span class="item-content">
+                                <span class="item-label">Active Reading</span>
+                                <span class="item-description">Annotating, highlighting, questioning, note-taking</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assessment -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>📋 Assessment</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Formative Assessment">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Formative Assessment</span>
+                                <span class="item-description">Ongoing, in-the-moment insights for instructional adjustment</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📈" data-label="Summative Assessment">
+                            <span class="item-icon">📈</span>
+                            <span class="item-content">
+                                <span class="item-label">Summative Assessment</span>
+                                <span class="item-description">Outcome scores, performance summaries, progress reports</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🧭" data-label="Diagnostic Assessment">
+                            <span class="item-icon">🧭</span>
+                            <span class="item-content">
+                                <span class="item-label">Diagnostic Assessment</span>
+                                <span class="item-description">Strategy diagnosis, error analysis, profile generation</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Progress Monitoring">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Progress Monitoring</span>
+                                <span class="item-description">Tracking growth over time toward learning goals</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="⚠️" data-label="Early Warning Systems">
+                            <span class="item-icon">⚠️</span>
+                            <span class="item-content">
+                                <span class="item-label">Early Warning Systems</span>
+                                <span class="item-description">Identifying at-risk students before they fall behind</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🏆" data-label="Goal Setting">
+                            <span class="item-icon">🏆</span>
+                            <span class="item-content">
+                                <span class="item-label">Goal Setting</span>
+                                <span class="item-description">Helping students set and track personal learning goals</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Your Own Category -->
+            <div class="add-category-container">
+                <div class="add-category-header" onclick="toggleAddCategory(this)">
+                    <span>📁</span> + Create Your Own Category
+                </div>
+                <div class="add-category-fields">
+                    <input type="text" placeholder="Enter category name..." class="add-cat-input">
+                    <button class="add-cat-btn" onclick="addCustomCategory(this)">Create</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL 5: LEARNER CONTEXT ===== -->
+        <div class="panel-overlay" id="panel5">
+            <div class="panel-header">
+                <span class="panel-icon">👥</span>
+                <h2>Learner Context</h2>
+                <span class="badge">Who &amp; How They Learn</span>
+                <button class="close-btn" onclick="closePanel()">✕</button>
+            </div>
+            <p class="description">Understand <strong>who</strong> your learners are and <strong>how they're experiencing</strong> the reading activity.</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search learner context..." oninput="filterItems(this, 'panel5')">
+            </div>
+
+            <!-- Student Groups -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>👥 Student Groups</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🏫" data-label="Class Level">
+                            <span class="item-icon">🏫</span>
+                            <span class="item-content">
+                                <span class="item-label">Class Level</span>
+                                <span class="item-description">Whole class analytics, group comparisons, aggregate patterns</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="👥" data-label="Group Level">
+                            <span class="item-icon">👥</span>
+                            <span class="item-content">
+                                <span class="item-label">Group Level</span>
+                                <span class="item-description">Small group dynamics, collaboration patterns, team performance</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="👤" data-label="Individual Level">
+                            <span class="item-icon">👤</span>
+                            <span class="item-content">
+                                <span class="item-label">Individual Level</span>
+                                <span class="item-description">Personalized insights, individual progress, unique needs</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learner State -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>📊 Learner State</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="😐" data-label="Disengagement">
+                            <span class="item-icon">😐</span>
+                            <span class="item-content">
+                                <span class="item-label">Disengagement</span>
+                                <span class="item-description">Low attention, off-task behavior, lack of participation</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📉" data-label="Below Average Performance">
+                            <span class="item-icon">📉</span>
+                            <span class="item-content">
+                                <span class="item-label">Below Average Performance</span>
+                                <span class="item-description">Declining scores, struggling with grade-level expectations</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔄" data-label="Specific Struggle">
+                            <span class="item-icon">🔄</span>
+                            <span class="item-content">
+                                <span class="item-label">Specific Struggle</span>
+                                <span class="item-description">Difficulty with specific skills: decoding, comprehension, vocabulary</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="😰" data-label="Reading Anxiety">
+                            <span class="item-icon">😰</span>
+                            <span class="item-content">
+                                <span class="item-label">Reading Anxiety</span>
+                                <span class="item-description">High stress, avoidance, negative self-perception</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🧠" data-label="High Cognitive Load">
+                            <span class="item-icon">🧠</span>
+                            <span class="item-content">
+                                <span class="item-label">High Cognitive Load</span>
+                                <span class="item-description">Information overload, processing difficulties, fatigue</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🚀" data-label="Advanced Performance">
+                            <span class="item-icon">🚀</span>
+                            <span class="item-content">
+                                <span class="item-label">Advanced Performance</span>
+                                <span class="item-description">Exceeding expectations, ready for challenge and extension</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Your Own Category -->
+            <div class="add-category-container">
+                <div class="add-category-header" onclick="toggleAddCategory(this)">
+                    <span>📁</span> + Create Your Own Category
+                </div>
+                <div class="add-category-fields">
+                    <input type="text" placeholder="Enter category name..." class="add-cat-input">
+                    <button class="add-cat-btn" onclick="addCustomCategory(this)">Create</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL 6: VISUALIZATION METHODS ===== -->
+        <div class="panel-overlay" id="panel6">
+            <div class="panel-header">
+                <span class="panel-icon">📊</span>
+                <h2>Visualization Methods</h2>
+                <span class="badge">From Data to Insight</span>
+                <button class="close-btn" onclick="closePanel()">✕</button>
+            </div>
+            <p class="description">Effective visualizations translate complex data into interpretable insights. Select the visualization approaches that support sensemaking and action.</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search visualization methods..." oninput="filterItems(this, 'panel6')">
+            </div>
+
+            <!-- Attention & Engagement -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🔥 Attention &amp; Engagement</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔥" data-label="Heatmaps / Attention">
+                            <span class="item-icon">🔥</span>
+                            <span class="item-content">
+                                <span class="item-label">Heatmaps / Attention</span>
+                                <span class="item-description">Gaze plots, engagement hotspots, confusion indicators</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="😊" data-label="Emotion / Affect Visualizations">
+                            <span class="item-icon">😊</span>
+                            <span class="item-content">
+                                <span class="item-label">Emotion / Affect Visualizations</span>
+                                <span class="item-description">Affect timelines, sentiment analysis, emotional states</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="❓" data-label="Confusion / Difficulty Indicators">
+                            <span class="item-icon">❓</span>
+                            <span class="item-content">
+                                <span class="item-label">Confusion / Difficulty Indicators</span>
+                                <span class="item-description">Identifying challenging passages, concepts, or tasks</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Engagement Timelines">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Engagement Timelines</span>
+                                <span class="item-description">Visualizing engagement patterns over time</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance & Progress -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>📈 Performance &amp; Progress</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📈" data-label="Performance Dashboards">
+                            <span class="item-icon">📈</span>
+                            <span class="item-content">
+                                <span class="item-label">Performance Dashboards</span>
+                                <span class="item-description">Comprehension scores, fluency metrics, comparative views</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="⏱️" data-label="Temporal / Timeline Views">
+                            <span class="item-icon">⏱️</span>
+                            <span class="item-content">
+                                <span class="item-label">Temporal / Timeline Views</span>
+                                <span class="item-description">Learning curves, engagement patterns across time</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Comparative Views">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Comparative Views</span>
+                                <span class="item-description">Pre-post comparisons, group vs. individual benchmarks</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📉" data-label="Growth Trajectories">
+                            <span class="item-icon">📉</span>
+                            <span class="item-content">
+                                <span class="item-label">Growth Trajectories</span>
+                                <span class="item-description">Visualizing progress toward learning goals over time</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patterns & Profiles -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>📋 Patterns &amp; Profiles</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📋" data-label="Strategy Profiles">
+                            <span class="item-icon">📋</span>
+                            <span class="item-content">
+                                <span class="item-label">Strategy Profiles</span>
+                                <span class="item-description">Reading style summaries, behavioral trajectories</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🌐" data-label="Network / Relationship Maps">
+                            <span class="item-icon">🌐</span>
+                            <span class="item-content">
+                                <span class="item-label">Network / Relationship Maps</span>
+                                <span class="item-description">Concept connections, discussion networks, idea relationships</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🎯" data-label="Learner Segmentation">
+                            <span class="item-icon">🎯</span>
+                            <span class="item-content">
+                                <span class="item-label">Learner Segmentation</span>
+                                <span class="item-description">Grouping learners by behavior patterns, strategy use, or performance</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Cluster Visualizations">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Cluster Visualizations</span>
+                                <span class="item-description">Visual representation of learner groupings and characteristics</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Narrative & Storytelling -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>💬 Narrative &amp; Storytelling</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="💬" data-label="Narrative Reports">
+                            <span class="item-icon">💬</span>
+                            <span class="item-content">
+                                <span class="item-label">Narrative Reports</span>
+                                <span class="item-description">Personalized stories, actionable insights, recommendations</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔄" data-label="Layered Storytelling">
+                            <span class="item-icon">🔄</span>
+                            <span class="item-content">
+                                <span class="item-label">Layered Storytelling</span>
+                                <span class="item-description">Multiple views: data → signal → insight → action</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📖" data-label="Data Stories">
+                            <span class="item-icon">📖</span>
+                            <span class="item-content">
+                                <span class="item-label">Data Stories</span>
+                                <span class="item-description">Sequential narrative with data visualizations explaining learning journeys</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🎬" data-label="Animated Visualizations">
+                            <span class="item-icon">🎬</span>
+                            <span class="item-content">
+                                <span class="item-label">Animated Visualizations</span>
+                                <span class="item-description">Showing change and development over time through animation</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Types -->
+            <div class="subcategory-group">
+                <div class="subcategory-header" onclick="toggleSubcategory(this)">
+                    <span>🎨 Visualization Types</span>
+                    <span class="sub-toggle open">▼</span>
+                </div>
+                <div class="subcategory-items open">
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📊" data-label="Bar Charts">
+                            <span class="item-icon">📊</span>
+                            <span class="item-content">
+                                <span class="item-label">Bar Charts</span>
+                                <span class="item-description">Comparisons, rankings, distributions</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📈" data-label="Line Charts">
+                            <span class="item-icon">📈</span>
+                            <span class="item-content">
+                                <span class="item-label">Line Charts</span>
+                                <span class="item-description">Trends over time, trajectories, progression</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔵" data-label="Scatter Plots">
+                            <span class="item-icon">🔵</span>
+                            <span class="item-content">
+                                <span class="item-label">Scatter Plots</span>
+                                <span class="item-description">Correlations, relationships, distributions</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🗺️" data-label="Geographic Maps">
+                            <span class="item-icon">🗺️</span>
+                            <span class="item-content">
+                                <span class="item-label">Geographic Maps</span>
+                                <span class="item-description">Spatial data, location-based learning patterns</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="🔄" data-label="Radial / Circular Layouts">
+                            <span class="item-icon">🔄</span>
+                            <span class="item-content">
+                                <span class="item-label">Radial / Circular Layouts</span>
+                                <span class="item-description">Hierarchical data, relationships, networks</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="checkbox-item">
+                        <div class="checkbox-row">
+                            <input type="checkbox" data-icon="📦" data-label="Box Plots">
+                            <span class="item-icon">📦</span>
+                            <span class="item-content">
+                                <span class="item-label">Box Plots</span>
+                                <span class="item-description">Distribution, outliers, statistical summaries</span>
+                            </span>
+                        </div>
+                    </label>
+                    <div class="add-own-container">
+                        <div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>
+                        <div class="add-own-fields">
+                            <input type="text" placeholder="Enter name..." class="add-own-input">
+                            <div class="icon-picker">
+                                <span onclick="selectIcon(this)" data-icon="📱">📱</span>
+                                <span onclick="selectIcon(this)" data-icon="💻">💻</span>
+                                <span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>
+                                <span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>
+                                <span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>
+                                <span onclick="selectIcon(this)" data-icon="📊">📊</span>
+                                <span onclick="selectIcon(this)" data-icon="📈">📈</span>
+                                <span onclick="selectIcon(this)" data-icon="🔢">🔢</span>
+                            </div>
+                            <button class="add-btn" onclick="addCustomItem(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Your Own Category -->
+            <div class="add-category-container">
+                <div class="add-category-header" onclick="toggleAddCategory(this)">
+                    <span>📁</span> + Create Your Own Category
+                </div>
+                <div class="add-category-fields">
+                    <input type="text" placeholder="Enter category name..." class="add-cat-input">
+                    <button class="add-cat-btn" onclick="addCustomCategory(this)">Create</button>
+                </div>
+            </div>
+
+            <!-- Framework Section -->
+            <div class="framework-section">
+                <div class="section-title">📚 Existing Frameworks</div>
+                <div class="framework-cards">
+                    <div class="framework-card">
+                        <a href="images/Visualizations/layered_storytelling.png" target="_blank" title="Open image in new tab">
+                            <img src="images/Visualizations/layered_storytelling.png" alt="Layered Storytelling" onerror="this.style.opacity='0.4'; this.alt='Image not found'">
+                        </a>
+                        <a href="#" onclick="openFramework('https://martinezmaldonado.net/files/CHI20-Multimodal_Layered_Approach.pdf', 'images/Visualizations/layered_storytelling.png', 'Layered Storytelling', 'From Data to Insights: A Layered Storytelling Approach for Multimodal Learning Analytics'); return false;">
+                            <div class="card-body">
+                                <div class="card-title">Layered Storytelling</div>
+                                <span class="card-paper">From Data to Insights: A Layered Storytelling Approach for Multimodal Learning Analytics</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SIDEBAR ===== -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span>📋</span>
+                <h3>My Collection</h3>
+                <span class="count-badge" id="collectionCount">0</span>
+            </div>
+
+            <div class="use-case-section">
+                <label for="useCaseTitle">📌 Use Case Title</label>
+                <input type="text" id="useCaseTitle" placeholder="Enter a title for your use case..." oninput="saveSession()">
+                <label for="useCaseDescription">📝 Use Case Description</label>
+                <textarea id="useCaseDescription" placeholder="Describe your use case in a few words..." oninput="saveSession()"></textarea>
+            </div>
+
+            <div id="collectionContainer">
+                <div class="empty-state" id="emptyState">
+                    <span class="empty-icon">📭</span>
+                    <p>Select items from the cards<br>to build your use case</p>
+                </div>
+                <div id="collectionItems"></div>
+            </div>
+
+            <div class="clear-all">
+                <button class="load-btn" onclick="loadSession()">📂 Load Last</button>
+                <button onclick="clearAll()">🗑️ Clear All</button>
+                <button class="export-btn" onclick="exportCollection()">📤 Export</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ===== CATEGORY CONFIGURATION =====
+        var CATEGORY_MAP = {
+            'panel1': 'MMLA Modalities',
+            'panel2': 'AI Approaches',
+            'panel3': 'Dashboard Functionality',
+            'panel4': 'Learning & Instruction',
+            'panel5': 'Learner Context',
+            'panel6': 'Visualization Methods'
+        };
+
+        var CATEGORY_ICONS = {
+            'MMLA Modalities': '📡',
+            'AI Approaches': '🤖',
+            'Dashboard Functionality': '📊',
+            'Learning & Instruction': '📚',
+            'Learner Context': '👥',
+            'Visualization Methods': '📊'
+        };
+
+        var CATEGORY_KEYS = ['MMLA Modalities', 'AI Approaches', 'Dashboard Functionality', 'Learning & Instruction',
+            'Learner Context', 'Visualization Methods'
+        ];
+
+        var collection = {};
+        var customCategories = {};
+
+        // ===== TOAST =====
+        function showToast(message, duration) {
+            duration = duration || 2000;
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('visible');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(function() {
+                toast.classList.remove('visible');
+            }, duration);
+        }
+
+        // ===== POSITION NODES =====
+        function positionNodes() {
+            var container = document.getElementById('circleContainer');
+            var nodes = container.querySelectorAll('.circle-node');
+            var numNodes = nodes.length;
+            var containerWidth = container.offsetWidth;
+            var containerHeight = container.offsetHeight;
+            var centerX = containerWidth / 2;
+            var centerY = containerHeight / 2;
+            var radiusPercent = 36;
+            var radiusX = containerWidth * radiusPercent / 100;
+            var radiusY = containerHeight * radiusPercent / 100;
+
+            nodes.forEach(function(node, index) {
+                var angle = (index / numNodes) * 2 * Math.PI - Math.PI / 2;
+                var x = centerX + radiusX * Math.cos(angle) - node.offsetWidth / 2;
+                var y = centerY + radiusY * Math.sin(angle) - node.offsetHeight / 2;
+                node.style.left = x + 'px';
+                node.style.top = y + 'px';
+                node.style.right = 'auto';
+                node.style.bottom = 'auto';
+                node.style.transform = 'none';
+            });
+        }
+
+        // ===== TOGGLE FUNCTIONS =====
+        function toggleSubcategory(header) {
+            var items = header.nextElementSibling;
+            var toggle = header.querySelector('.sub-toggle');
+            if (items) {
+                items.classList.toggle('open');
+                if (toggle) toggle.classList.toggle('open');
+            }
+        }
+
+        function toggleAddCategory(header) {
+            var container = header.closest('.add-category-container');
+            var fields = container.querySelector('.add-category-fields');
+            fields.classList.toggle('active');
+            if (fields.classList.contains('active')) {
+                var input = fields.querySelector('.add-cat-input');
+                if (input) setTimeout(function() { input.focus(); }, 100);
+            }
+        }
+
+        function toggleAddOwn(header) {
+            var container = header.closest('.add-own-container');
+            var fields = container.querySelector('.add-own-fields');
+            fields.classList.toggle('active');
+            if (fields.classList.contains('active')) {
+                var input = fields.querySelector('.add-own-input');
+                if (input) setTimeout(function() { input.focus(); }, 100);
+            }
+        }
+
+        function selectIcon(element) {
+            var picker = element.closest('.icon-picker');
+            picker.querySelectorAll('span').forEach(function(span) {
+                span.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // ===== FILTER =====
+        function filterItems(input, panelId) {
+            var query = input.value.toLowerCase().trim();
+            var panel = document.getElementById(panelId);
+            var items = panel.querySelectorAll('.checkbox-item');
+
+            items.forEach(function(item) {
+                var label = item.querySelector('.item-label');
+                var desc = item.querySelector('.item-description');
+                var text = (label ? label.textContent : '') + (desc ? ' ' + desc.textContent : '');
+                var match = text.toLowerCase().includes(query);
+                item.style.display = match ? '' : 'none';
+            });
+
+            var groups = panel.querySelectorAll('.subcategory-group');
+            groups.forEach(function(group) {
+                var visibleItems = group.querySelectorAll('.checkbox-item[style*="display: none"]');
+                var totalItems = group.querySelectorAll('.checkbox-item').length;
+                var header = group.querySelector('.subcategory-header');
+                if (header) {
+                    var hasVisible = visibleItems.length < totalItems;
+                    header.style.opacity = hasVisible ? '1' : '0.4';
+                }
+            });
+        }
+
+        // ===== AI FIELDS =====
+        function toggleAIFields(checkbox) {
+            var item = checkbox.closest('.checkbox-item');
+            var fields = item.querySelector('.ai-fields');
+            if (fields) {
+                if (checkbox.checked) {
+                    fields.classList.add('active');
+                    updateAIItemFromFields(item);
+                } else {
+                    fields.classList.remove('active');
+                }
+            }
+        }
+
+        function updateAIItemFromFields(item) {
+            var checkbox = item.querySelector('input[type="checkbox"]');
+            if (!checkbox || !checkbox.checked) return;
+            var panel = item.closest('.panel-overlay');
+            var catName = CATEGORY_MAP[panel.id] || 'Other';
+            var label = checkbox.dataset.label;
+            var fields = item.querySelector('.ai-fields');
+            if (!fields) return;
+            var inputField = fields.querySelector('.ai-input');
+            var outputField = fields.querySelector('.ai-output');
+
+            if (collection[catName]) {
+                for (var j = 0; j < collection[catName].length; j++) {
+                    if (collection[catName][j].label === label) {
+                        if (inputField) collection[catName][j].aiInput = inputField.value;
+                        if (outputField) collection[catName][j].aiOutput = outputField.value;
+                        break;
+                    }
+                }
+            }
+            updateCollection();
+            saveSession();
+        }
+
+        function updateAIItemFromSidebar(category, index, fieldType, value) {
+            if (collection[category] && collection[category][index]) {
+                if (fieldType === 'input') {
+                    collection[category][index].aiInput = value;
+                } else if (fieldType === 'output') {
+                    collection[category][index].aiOutput = value;
+                }
+                var label = collection[category][index].label;
+                var panels = document.querySelectorAll('.panel-overlay');
+                for (var p = 0; p < panels.length; p++) {
+                    var checkboxes = panels[p].querySelectorAll('.checkbox-item input[type="checkbox"]');
+                    for (var c = 0; c < checkboxes.length; c++) {
+                        if (checkboxes[c].dataset.label === label && checkboxes[c].checked) {
+                            var item = checkboxes[c].closest('.checkbox-item');
+                            var fields = item.querySelector('.ai-fields');
+                            if (fields) {
+                                var inputField = fields.querySelector('.ai-input');
+                                var outputField = fields.querySelector('.ai-output');
+                                if (inputField && fieldType === 'input') inputField.value = value;
+                                if (outputField && fieldType === 'output') outputField.value = value;
+                            }
+                            break;
+                        }
+                    }
+                }
+                saveSession();
+            }
+        }
+
+        // ===== ADD CUSTOM =====
+        function addCustomCategory(button) {
+            var container = button.closest('.add-category-container');
+            var input = container.querySelector('.add-cat-input');
+            var name = input.value.trim();
+
+            if (!name) {
+                input.style.borderColor = '#ef4444';
+                input.focus();
+                return;
+            }
+            input.style.borderColor = '';
+
+            var panel = container.closest('.panel-overlay');
+            var panelId = panel.id;
+            var catName = CATEGORY_MAP[panelId] || 'Other';
+
+            var parentGroup = container.parentNode;
+            var newGroup = document.createElement('div');
+            newGroup.className = 'subcategory-group';
+
+            var header = document.createElement('div');
+            header.className = 'subcategory-header';
+            header.onclick = function() { toggleSubcategory(this); };
+            header.innerHTML = '<span>📁 ' + name + '</span><span class="sub-toggle open">▼</span>';
+
+            var items = document.createElement('div');
+            items.className = 'subcategory-items open';
+
+            var addOwn = document.createElement('div');
+            addOwn.className = 'add-own-container';
+            addOwn.innerHTML =
+                '<div class="add-own-header" onclick="toggleAddOwn(this)"><span>➕</span> Add your own</div>' +
+                '<div class="add-own-fields">' +
+                '<input type="text" placeholder="Enter name..." class="add-own-input">' +
+                '<div class="icon-picker">' +
+                '<span onclick="selectIcon(this)" data-icon="📱">📱</span>' +
+                '<span onclick="selectIcon(this)" data-icon="💻">💻</span>' +
+                '<span onclick="selectIcon(this)" data-icon="🖥️">🖥️</span>' +
+                '<span onclick="selectIcon(this)" data-icon="⌨️">⌨️</span>' +
+                '<span onclick="selectIcon(this)" data-icon="🖱️">🖱️</span>' +
+                '<span onclick="selectIcon(this)" data-icon="📊">📊</span>' +
+                '<span onclick="selectIcon(this)" data-icon="📈">📈</span>' +
+                '<span onclick="selectIcon(this)" data-icon="🔢">🔢</span>' +
+                '</div>' +
+                '<button class="add-btn" onclick="addCustomItem(this)">Add</button>' +
+                '</div>';
+
+            items.appendChild(addOwn);
+            newGroup.appendChild(header);
+            newGroup.appendChild(items);
+
+            parentGroup.insertBefore(newGroup, container);
+
+            if (!customCategories[catName]) customCategories[catName] = [];
+            customCategories[catName].push(name);
+
+            input.value = '';
+            var fields = container.querySelector('.add-category-fields');
+            fields.classList.remove('active');
+
+            showToast('📁 Category "' + name + '" created!');
+            saveSession();
+        }
+
+        function addCustomItem(button) {
+            var container = button.closest('.add-own-container');
+            var input = container.querySelector('.add-own-input');
+            var picker = container.querySelector('.icon-picker');
+            var selectedIcon = picker.querySelector('.active');
+
+            var name = input.value.trim();
+            if (!name) {
+                input.style.borderColor = '#ef4444';
+                input.focus();
+                return;
+            }
+            input.style.borderColor = '';
+
+            var icon = selectedIcon ? selectedIcon.dataset.icon : '📌';
+            var itemsContainer = container.closest('.subcategory-items') || container.closest('.tool-list');
+            var newItem = document.createElement('label');
+            newItem.className = 'checkbox-item highlight-new';
+
+            var isAI = container.closest('.subcategory-group') && container.closest('.subcategory-group').querySelector(
+                '.subcategory-header span') && container.closest('.subcategory-group').querySelector(
+                '.subcategory-header span').textContent.includes('AI Methods');
+
+            var aiFieldsHtml = '';
+            if (isAI) {
+                aiFieldsHtml =
+                    '<div class="ai-fields active"><div class="ai-field"><label>Input</label><input type="text" placeholder="e.g., input data" class="ai-input"></div><div class="ai-field"><label>Output</label><input type="text" placeholder="e.g., output result" class="ai-output"></div></div>';
+            }
+
+            newItem.innerHTML =
+                '<div class="checkbox-row">' +
+                '<input type="checkbox" data-icon="' + icon + '" data-label="' + name + '" data-ai="' + (isAI ? 'true' :
+                    'false') + '" checked>' +
+                '<span class="item-icon">' + icon + '</span>' +
+                '<span class="item-content">' +
+                '<span class="item-label">' + name + '</span>' +
+                '<span class="item-description">Custom item added by user</span>' +
+                '</span>' +
+                '</div>' +
+                aiFieldsHtml;
+
+            if (itemsContainer) {
+                itemsContainer.insertBefore(newItem, container);
+            } else {
+                container.parentNode.insertBefore(newItem, container);
+            }
+
+            var checkbox = newItem.querySelector('input[type="checkbox"]');
+            var event = new Event('change');
+            checkbox.dispatchEvent(event);
+
+            if (isAI) {
+                toggleAIFields(checkbox);
+            }
+
+            input.value = '';
+            picker.querySelectorAll('span').forEach(function(span) {
+                span.classList.remove('active');
+            });
+            var fields = container.querySelector('.add-own-fields');
+            fields.classList.remove('active');
+
+            newItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast('✅ Added "' + name + '" to your collection');
+        }
+
+        // ===== FRAMEWORK =====
+        function openFramework(link, imageSrc, title, paperTitle) {
+            window.open(link, '_blank');
+            showToast('📄 ' + paperTitle, 3000);
+            return false;
+        }
+
+        // ===== PANEL MANAGEMENT =====
+        var panels = {
+            panel1: document.getElementById('panel1'),
+            panel2: document.getElementById('panel2'),
+            panel3: document.getElementById('panel3'),
+            panel4: document.getElementById('panel4'),
+            panel5: document.getElementById('panel5'),
+            panel6: document.getElementById('panel6')
+        };
+        var activePanel = null;
+
+        function openPanel(panelId) {
+            closePanel();
+            var panel = document.getElementById(panelId);
+            var backdrop = document.getElementById('panelBackdrop');
+            if (panel) {
+                panel.classList.add('open');
+                backdrop.classList.add('open');
+                activePanel = panelId;
+                var nodes = document.querySelectorAll('.circle-node');
+                for (var i = 0; i < nodes.length; i++) {
+                    var node = nodes[i];
+                    node.classList.remove('active');
+                    if (node.dataset.panel === panelId) node.classList.add('active');
+                }
+                var searchInput = panel.querySelector('.search-container input');
+                if (searchInput) {
+                    searchInput.value = '';
+                    filterItems(searchInput, panelId);
+                }
+                checkScroll(panel);
+            }
+        }
+
+        function closePanel() {
+            for (var key in panels) {
+                if (panels[key]) panels[key].classList.remove('open');
+            }
+            document.getElementById('panelBackdrop').classList.remove('open');
+            var nodes = document.querySelectorAll('.circle-node');
+            for (var i = 0; i < nodes.length; i++) nodes[i].classList.remove('active');
+            activePanel = null;
+        }
+
+        function checkScroll(panel) {
+            var indicator = panel.querySelector('.scroll-indicator');
+            if (!indicator) return;
+            var isScrollable = panel.scrollHeight > panel.clientHeight + 10;
+            if (isScrollable) {
+                indicator.classList.add('visible');
+            } else {
+                indicator.classList.remove('visible');
+            }
+        }
+
+        var circleNodes = document.querySelectorAll('.circle-node');
+        for (var i = 0; i < circleNodes.length; i++) {
+            circleNodes[i].addEventListener('click', function(e) {
+                e.stopPropagation();
+                var panelId = this.dataset.panel;
+                if (activePanel === panelId) closePanel();
+                else openPanel(panelId);
+            });
+        }
+
+        document.getElementById('panelBackdrop').addEventListener('click', closePanel);
+
+        document.querySelectorAll('.panel-overlay').forEach(function(panel) {
+            panel.addEventListener('scroll', function() {
+                checkScroll(this);
+            });
+            var resizeObserver = new ResizeObserver(function() {
+                checkScroll(panel);
+            });
+            resizeObserver.observe(panel);
+        });
+
+        // ===== COLLECTION MANAGEMENT =====
+        function getCategoryDisplayName(category) {
+            var names = {
+                'MMLA Modalities': '📡 MMLA',
+                'AI Approaches': '🤖 AI',
+                'Dashboard Functionality': '📊 Dashboard',
+                'Learning & Instruction': '📚 Learning',
+                'Learner Context': '👥 Context',
+                'Visualization Methods': '📊 Viz'
+            };
+            return names[category] || category;
+        }
+
+        function updateCollection() {
+            var container = document.getElementById('collectionItems');
+            var emptyState = document.getElementById('emptyState');
+            var countBadge = document.getElementById('collectionCount');
+            var total = 0;
+            for (var cat in collection) {
+                if (collection.hasOwnProperty(cat)) total += collection[cat].length;
+            }
+            countBadge.textContent = total;
+
+            if (total === 0) {
+                emptyState.style.display = 'block';
+                container.innerHTML = '';
+                return;
+            }
+            emptyState.style.display = 'none';
+
+            var html = '';
+            for (var c = 0; c < CATEGORY_KEYS.length; c++) {
+                var cat = CATEGORY_KEYS[c];
+                if (collection[cat] && collection[cat].length > 0) {
+                    html += '<div class="collection-group">';
+                    html += '<div class="group-title">' + getCategoryDisplayName(cat) + '</div>';
+                    for (var j = 0; j < collection[cat].length; j++) {
+                        var item = collection[cat][j];
+                        html += '<div class="collection-item">';
+                        html += '<div class="item-header">';
+                        html += '<span class="item-icon">' + item.icon + '</span>';
+                        html += '<span class="item-label">' + item.label + '</span>';
+                        html += '<button class="remove-btn" onclick="removeItem(\'' + cat + '\', ' + j + ')">✕</button>';
+                        html += '</div>';
+                        html += '<div class="item-comment">';
+                        html += '<span class="comment-label">💬 Comment</span>';
+                        html +=
+                            '<textarea placeholder="Add a comment..." onchange="updateComment(\'' + cat + '\', ' + j + ', this.value)">' +
+                            (item.comment || '') + '</textarea>';
+                        html += '</div>';
+                        // Show AI IO fields only for AI Approaches category
+                        if (cat === 'AI Approaches' && (item.aiInput !== undefined || item.aiOutput !== undefined)) {
+                            html += '<div class="ai-io-fields show">';
+                            html +=
+                                '<div class="io-field"><label>Input</label><input type="text" value="' + (item.aiInput ||
+                                    '') + '" placeholder="Input..." onchange="updateAIItemFromSidebar(\'' + cat +
+                                '\', ' + j + ', \'input\', this.value)"></div>';
+                            html +=
+                                '<div class="io-field"><label>Output</label><input type="text" value="' + (item.aiOutput ||
+                                    '') + '" placeholder="Output..." onchange="updateAIItemFromSidebar(\'' + cat +
+                                '\', ' + j + ', \'output\', this.value)"></div>';
+                            html += '</div>';
+                        }
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                }
+            }
+            container.innerHTML = html;
+        }
+
+        function addItem(category, icon, label, tag, aiInput, aiOutput) {
+            if (!collection[category]) collection[category] = [];
+            var exists = false;
+            for (var i = 0; i < collection[category].length; i++) {
+                if (collection[category][i].label === label) { exists = true; break; }
+            }
+            if (!exists) {
+                var item = { icon: icon, label: label, tag: tag || '', comment: '' };
+                if (aiInput !== undefined) item.aiInput = aiInput;
+                if (aiOutput !== undefined) item.aiOutput = aiOutput;
+                collection[category].push(item);
+                updateCollection();
+                saveSession();
+            }
+        }
+
+        function removeItem(category, index) {
+            if (collection[category]) {
+                collection[category].splice(index, 1);
+                if (collection[category].length === 0) delete collection[category];
+                updateCollection();
+                saveSession();
+            }
+        }
+
+        function updateComment(category, index, value) {
+            if (collection[category] && collection[category][index]) {
+                collection[category][index].comment = value;
+                saveSession();
+            }
+        }
+
+        function clearAll() {
+            if (!confirm('Are you sure you want to clear all selections?')) return;
+            for (var cat in collection) {
+                if (collection.hasOwnProperty(cat)) delete collection[cat];
+            }
+            document.getElementById('useCaseTitle').value = '';
+            document.getElementById('useCaseDescription').value = '';
+            var checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = false;
+                checkboxes[i].closest('.checkbox-item').classList.remove('selected');
+                var fields = checkboxes[i].closest('.checkbox-item').querySelector('.ai-fields');
+                if (fields) fields.classList.remove('active');
+            }
+            updateCollection();
+            saveSession();
+            showToast('🗑️ Collection cleared');
+        }
+
+        // ===== SAVE / LOAD =====
+        function saveSession() {
+            try {
+                var sessionData = {
+                    collection: collection,
+                    useCaseTitle: document.getElementById('useCaseTitle').value,
+                    useCase: document.getElementById('useCaseDescription').value,
+                    customCategories: customCategories
+                };
+                localStorage.setItem('aim2learn_session', JSON.stringify(sessionData));
+            } catch (e) {
+                console.warn('Could not save session:', e);
+            }
+        }
+
+        function loadSession() {
+            try {
+                var saved = localStorage.getItem('aim2learn_session');
+                if (!saved) {
+                    showToast('ℹ️ No saved session found');
+                    return;
+                }
+                var sessionData = JSON.parse(saved);
+                for (var cat in collection) {
+                    if (collection.hasOwnProperty(cat)) delete collection[cat];
+                }
+                for (var key in sessionData.collection) {
+                    collection[key] = sessionData.collection[key];
+                }
+                if (sessionData.customCategories) {
+                    customCategories = sessionData.customCategories;
+                }
+                document.getElementById('useCaseTitle').value = sessionData.useCaseTitle || '';
+                document.getElementById('useCaseDescription').value = sessionData.useCase || '';
+                syncCheckboxesFromCollection();
+                updateCollection();
+                showToast('📂 Session loaded successfully!');
+            } catch (e) {
+                console.error('Failed to load session:', e);
+                showToast('❌ Error loading session');
+            }
+        }
+
+        function syncCheckboxesFromCollection() {
+            document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(function(cb) {
+                cb.checked = false;
+                cb.closest('.checkbox-item').classList.remove('selected');
+                var fields = cb.closest('.checkbox-item').querySelector('.ai-fields');
+                if (fields) fields.classList.remove('active');
+            });
+
+            for (var cat in collection) {
+                if (collection.hasOwnProperty(cat)) {
+                    collection[cat].forEach(function(item) {
+                        var checkbox = document.querySelector(
+                            '.checkbox-item input[type="checkbox"][data-label="' + item.label.replace(/"/g, '\\"') +
+                            '"]');
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            var checkboxItem = checkbox.closest('.checkbox-item');
+                            checkboxItem.classList.add('selected');
+                            if (checkbox.dataset.ai === 'true') {
+                                var fields = checkboxItem.querySelector('.ai-fields');
+                                if (fields) {
+                                    fields.classList.add('active');
+                                    var input = fields.querySelector('.ai-input');
+                                    var output = fields.querySelector('.ai-output');
+                                    if (input) input.value = item.aiInput || '';
+                                    if (output) output.value = item.aiOutput || '';
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSession();
+            positionNodes();
+            setTimeout(function() {
+                updateCollection();
+            }, 100);
+        });
+
+        window.addEventListener('resize', function() {
+            positionNodes();
+        });
+
+        // ===== EXPORT =====
+        function exportCollection() {
+            try {
+                var useCaseTitle = document.getElementById('useCaseTitle').value || 'Untitled Use Case';
+                var useCase = document.getElementById('useCaseDescription').value || 'No description provided.';
+
+                var html = '<!DOCTYPE html>\n';
+                html += '<html lang="en">\n';
+                html += '<head>\n';
+                html += '    <meta charset="UTF-8">\n';
+                html += '    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
+                html += '    <title>AIM²LEARN Design Kit - Export</title>\n';
+                html += '    <style>\n';
+                html += '        * { margin: 0; padding: 0; box-sizing: border-box; }\n';
+                html += '        body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; background: #f0f4f8; color: #0f172a; }\n';
+                html += '        .header { text-align: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 3px solid #4f46e5; }\n';
+                html += '        .header h1 { color: #4f46e5; font-size: 2rem; }\n';
+                html += '        .header .sub { color: #64748b; font-size: 0.9rem; }\n';
+                html += '        .use-case-section { background: white; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }\n';
+                html += '        .use-case-section h2 { color: #0f172a; margin-bottom: 0.5rem; }\n';
+                html += '        .use-case-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; color: #1e293b; }\n';
+                html += '        .use-case-text { background: #f1f5f9; padding: 1rem; border-radius: 6px; }\n';
+                html += '        .columns-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; align-items: start; }\n';
+                html += '        .column { background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-height: 200px; }\n';
+                html += '        .column h3 { color: #4f46e5; font-size: 0.95rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem; }\n';
+                html += '        .column .empty { color: #94a3b8; text-align: center; padding: 1rem 0; font-size: 0.85rem; }\n';
+                html += '        .item { padding: 0.4rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }\n';
+                html += '        .item:last-child { border-bottom: none; }\n';
+                html += '        .item .icon { font-size: 1rem; margin-right: 0.3rem; }\n';
+                html += '        .item .label { font-weight: 500; }\n';
+                html += '        .item .comment { color: #64748b; font-size: 0.75rem; display: block; margin-top: 0.15rem; padding-left: 1.5rem; }\n';
+                html += '        .item .ai-detail { font-size: 0.75rem; color: #475569; padding-left: 1.5rem; }\n';
+                html += '        .footer { text-align: center; margin-top: 2rem; color: #94a3b8; font-size: 0.85rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; }\n';
+                html += '        @media (max-width: 1200px) { .columns-container { grid-template-columns: repeat(3, 1fr); } }\n';
+                html += '        @media (max-width: 768px) { .columns-container { grid-template-columns: repeat(2, 1fr); } }\n';
+                html += '        @media (max-width: 480px) { .columns-container { grid-template-columns: 1fr; } body { padding: 1rem; } }\n';
+                html += '    </style>\n';
+                html += '</head>\n';
+                html += '<body>\n';
+
+                // Header
+                html += '    <div class="header">\n';
+                html += '        <h1>🃏 AIM²LEARN Design Kit</h1>\n';
+                html += '        <div class="sub">Generated: ' + new Date().toLocaleString() + '</div>\n';
+                html += '    </div>\n';
+
+                // Use Case
+                html += '    <div class="use-case-section">\n';
+                html += '        <h2>📝 Use Case</h2>\n';
+                html += '        <div class="use-case-title">' + useCaseTitle + '</div>\n';
+                html += '        <div class="use-case-text">' + (useCase || 'No description provided.') + '</div>\n';
+                html += '    </div>\n';
+
+                // 6 Columns
+                html += '    <div class="columns-container">\n';
+
+                for (var c = 0; c < CATEGORY_KEYS.length; c++) {
+                    var cat = CATEGORY_KEYS[c];
+                    html += '        <div class="column">\n';
+                    html += '            <h3>' + CATEGORY_ICONS[cat] + ' ' + cat + '</h3>\n';
+
+                    if (collection[cat] && collection[cat].length > 0) {
+                        for (var i = 0; i < collection[cat].length; i++) {
+                            var item = collection[cat][i];
+                            html += '            <div class="item">\n';
+                            html += '                <span class="icon">' + item.icon + '</span>\n';
+                            html += '                <span class="label">' + item.label + '</span>\n';
+                            if (item.comment) {
+                                html += '                <span class="comment">' + item.comment + '</span>\n';
+                            }
+                            if (cat === 'AI Approaches') {
+                                if (item.aiInput) html += '                <div class="ai-detail">📥 ' + item.aiInput + '</div>\n';
+                                if (item.aiOutput) html += '                <div class="ai-detail">📤 ' + item.aiOutput + '</div>\n';
+                            }
+                            html += '            </div>\n';
+                        }
+                    } else {
+                        html += '            <div class="empty">— No items selected —</div>\n';
+                    }
+
+                    html += '        </div>\n';
+                }
+
+                html += '    </div>\n';
+
+                // Footer
+                html += '    <div class="footer">\n';
+                html += '        Generated from AIM²LEARN Design Tool\n';
+                html += '    </div>\n';
+
+                html += '</body>\n';
+                html += '</html>';
+
+                var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement('a');
+                link.href = url;
+                link.download = 'aim2learn-design-kit.html';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                showToast('📤 Exported as HTML!');
+            } catch (e) {
+                console.error('Export failed:', e);
+                showToast('❌ Export failed. Please try again.');
+            }
+        }
+
+        // ===== CHECKBOX HANDLING =====
+        var checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]');
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].addEventListener('change', function() {
+                var item = this.closest('.checkbox-item');
+                var panel = item.closest('.panel-overlay');
+                var catName = CATEGORY_MAP[panel.id] || 'Other';
+                var icon = this.dataset.icon || '📌';
+                var label = this.dataset.label || 'Item';
+                var tag = this.dataset.tag || '';
+                var isAI = this.dataset.ai === 'true';
+
+                if (isAI) {
+                    toggleAIFields(this);
+                }
+
+                var aiInput = '';
+                var aiOutput = '';
+                if (this.checked && isAI) {
+                    var fields = item.querySelector('.ai-fields');
+                    if (fields) {
+                        var inputField = fields.querySelector('.ai-input');
+                        var outputField = fields.querySelector('.ai-output');
+                        if (inputField) aiInput = inputField.value;
+                        if (outputField) aiOutput = outputField.value;
+                    }
+                }
+
+                if (this.checked) {
+                    item.classList.add('selected');
+                    addItem(catName, icon, label, tag, aiInput, aiOutput);
+                } else {
+                    item.classList.remove('selected');
+                    if (collection[catName]) {
+                        var index = -1;
+                        for (var j = 0; j < collection[catName].length; j++) {
+                            if (collection[catName][j].label === label) { index = j; break; }
+                        }
+                        if (index !== -1) {
+                            collection[catName].splice(index, 1);
+                            if (collection[catName].length === 0) delete collection[catName];
+                            updateCollection();
+                            saveSession();
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== AI FIELD CHANGES =====
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('ai-input') || e.target.classList.contains('ai-output')) {
+                var item = e.target.closest('.checkbox-item');
+                var checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    updateAIItemFromFields(item);
+                }
+            }
+        });
+
+        // ===== KEYBOARD SHORTCUTS =====
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && activePanel) {
+                closePanel();
+            }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's')) {
+                e.preventDefault();
+                saveSession();
+                showToast('💾 Session saved');
+            }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+                e.preventDefault();
+                loadSession();
+            }
+        });
+    </script>
+
+</body>
+</html>
